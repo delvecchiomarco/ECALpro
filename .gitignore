@@ -21,3 +21,7 @@ submit/HLT*
 submit/myTests/
 submit/rootTests/
 submit/AlCaP0_2025G_TestCalib/
+submit/plotEE.py
+submit/plot_2D_scan_EB.py
+submit/plot_2D_scan_EE.py
+submit/plot_Z_histo.py

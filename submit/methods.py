@@ -30,7 +30,7 @@ def printFillCfg1( outputfile ):
     #From DIGI
     if (FROMDIGI):
         outputfile.write("#DUMMY RECHIT\n")
-        outputfile.write("process.dummyHits = cms.EDProducer('DummyRechitDigis',\n")
+        outputfile.write("process.dummyHits = cms.EDProducer('DummyRechitDigisPi0',\n")
         outputfile.write("                                     doDigi = cms.untracked.bool(True),\n")
         outputfile.write("                                     # rechits\n")                                                                                                
         outputfile.write("                                     barrelHitProducer      = cms.InputTag('hltAlCaPi0EBUncalibrator','pi0EcalRecHitsEB'),\n")
@@ -562,11 +562,12 @@ def printSubmitSrc(outputfile, cfgName, source, destination, pwd, logpath):
         outputfile.write("if test -f " + source + "; then\n")
         outputfile.write("    echo 'file exists in %s and is good, now copying to eos'\n" % source)
         outputfile.write("    echo 'eos cp " + source + " " + destination + "'\n")
-        outputfile.write("    eos cp " + source + " " + destination + "\n")
+        # outputfile.write("    eos cp " + source + " " + destination + "\n")
+        outputfile.write(f'    xrdcp -f "{source}" "{destination}"\n')
         outputfile.write("    echo 'rm -f " + source + "'\n")
         outputfile.write("    rm -f " + source + "\n")
         outputfile.write("    echo 'now checking goodness of file on eos'\n")
-        outputfile.write("    cmdpy='python " + pwd + "/Utilities/checkGoodnessFileEOS.py -d " + destination + "'\n")
+        outputfile.write("    cmdpy='python3 " + pwd + "/Utilities/checkGoodnessFileEOS.py -d " + destination + "'\n")
         outputfile.write("    echo \"${cmdpy}\"\n") # note: need " and not '  here !!
         outputfile.write("    echo \"${cmdpy}\" | bash\n") # here as well
         outputfile.write("    echo ''\n")

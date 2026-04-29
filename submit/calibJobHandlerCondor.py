@@ -1,7 +1,12 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 import subprocess, time, sys, os
-from ROOT import *
+import ROOT
+from ROOT import (
+    TFile, TTree, TH2F,
+    gROOT, gSystem
+)
+from cppyy import addressof
 from cppyy.ll import cast
 from methods import *
 from datetime import datetime

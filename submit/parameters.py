@@ -17,7 +17,7 @@ CalibMapEtaRing    = "CalibCode/FillEpsilonPlot/data/calibMap.root"
 FixGhostDigis      = False   # this parameter is useful only for 2015. In 2016 stream the ghosts are no more there, but this is not harmful (can stay True)
 
 #PATH
-eosPath = '/eos/cms/store/group/dpg_ecal/alca_ecalcalib/piZero_Run3/emanuele'
+eosPath = '/eos/cms/store/group/dpg_ecal/alca_ecalcalib/piZero_Run3/marco'
 #
 prefixSourceFile = 'root://cms-xrd-global.cern.ch/'  # last / is left on purpose; tipically it can be '', but if source files are not on eos you need this prefix in PoolSource
 #  
@@ -37,19 +37,19 @@ isEoverEtrue = False if isMC==False else True # automatically set to False if is
 #localFolderToWriteFits = "/afs/cern.ch/work/m/mciprian/ecalpro_stuff/fits" if isEoverEtrue else ""  # no ending / needed
 localFolderToWriteFits = ""  # keep empty if not used, but in any case it only works if isEoverEtrue=True
 # if isEoverEtrue is set to False for MC, it runs the usual pi0 intercalibration using the mass
-MakeNtuple4optimization = False
+MakeNtuple4optimization = True # for HLT triggers study
 useCalibrationSelection = False # to use same selection of calibration when making ntuples (so not to copy all the cuts)
 useStreamSelection = False   # for now it only work with MakeNtuple4optimization = True, otherwise it is ignored, it is a hardcoded way to use the stream selection below
 #InputList and Folder name
-inputlist_n      = 'InputList/AlCaP0_Run2022_13_07_2022.list' if isMC==False else 'InputList/MultiPion_FlatPt-1To15_PhotonPtFilter_RunIIAutumn18DRPremix-102X_upgrade2018_realistic_v15-v2.list'
-dirname          = 'AlCaP0_2022B_TestCalib' if isMC==False else 'pi0CC_2018_EoverEtrue_foldSM_nFit10_onlyEB_fixGamma2EoverEtrue'   #'pi0Gun_MCV2_EoverEtrue_foldSM' #'testMC_adirname          = 'AlCaEta_2018_tagAsPi0ForULcalibration_ntuplesOptim' if isMC==False else 'pi0CC_2018_EoverEtrue_foldSM_nFit10_onlyEB_fixGamma2EoverEtrue'   #'pi0Gun_MCV2_EoverEtrue_foldSM' #'testMC_all_v2' #'AlCaP0_IC2017_upTo21September2017_2012regression_v2' # 'test' 
+inputlist_n      = 'InputList/purified_AlCaP0_Run2025G_28_01_2026.list' if isMC==False else 'InputList/MultiPion_FlatPt-1To15_PhotonPtFilter_RunIIAutumn18DRPremix-102X_upgrade2018_realistic_v15-v2.list'
+dirname          = 'AlCaP0_2025G_TestCalib_latest' if isMC==False else 'pi0CC_2018_EoverEtrue_foldSM_nFit10_onlyEB_fixGamma2EoverEtrue'   #'pi0Gun_MCV2_EoverEtrue_foldSM' #'testMC_adirname          = 'AlCaEta_2018_tagAsPi0ForULcalibration_ntuplesOptim' if isMC==False else 'pi0CC_2018_EoverEtrue_foldSM_nFit10_onlyEB_fixGamma2EoverEtrue'   #'pi0Gun_MCV2_EoverEtrue_foldSM' #'testMC_all_v2' #'AlCaP0_IC2017_upTo21September2017_2012regression_v2' # 'test' 
 NameTag          = dirname+'_' # Tag to the names to avoid overlap
 Silent           = False                 # True->Fill modules is silent; False->Fill modules has a standard output
 
 # to manage storing of rechits on eos, to avoid running unpacker and local reconstruction (multifit) for each iteration
 justCreateRecHits = False # if True, will run one iteration to produce and store RecHits from Digis
 runCalibrationFromRecHits = False # run calibration from rechits (it disables FROMDIGI below), it works if you have already run with justCreateRecHits = True
-eosOutputPathForRecHits = "/eos/cms/store/group/dpg_ecal/alca_ecalcalib/piZero_Run3/emanuele" # the path on eos where RecHits are stored (a subfolder named as 'AlCaP0_RecHitsFromDigis_dirname' is created)
+eosOutputPathForRecHits = "/eos/cms/store/group/dpg_ecal/alca_ecalcalib/piZero_Run3/marco" # the path on eos where RecHits are stored (a subfolder named as 'AlCaP0_RecHitsFromDigis_dirname' is created)
 filterEventsByAlCaTrigger = True # filter away pi0 or eta depending on what we will use (modest gain in speed for pi0, but huge for eta since number of events is much less). 
 # Might also filter by EB or EE (useful if one wants to run only on one of them) according to 'Barrel_or_Endcap' below, but not yet implemented since barrel is more important and has almost all the statistics
 
@@ -70,7 +70,7 @@ if MakeNtuple4optimization:
 
 SubmitFurtherIterationsFromExisting = False
 # maybe I don't need the root://eoscms/ prefix if eos is mounted
-startingCalibMap = 'root://eoscms//eos/cms/store/group/dpg_ecal/alca_ecalcalib/piZero_Run2/mciprian/AlCaEta_2018_tagAsPi0ForULcalibration_v2/iter_4/AlCaEta_2018_tagAsPi0ForULcalibration_v2_calibMap.root' # used  only if SubmitFurtherIterationsFromExisting is True
+startingCalibMap = 'root://eoscms//eos/cms/store/group/dpg_ecal/comm_ecal/pi0/AlCaP0_2022FG_TestCalib_iter5to10/iter_5/AlCaP0_2022FG_TestCalib_iter5to10_calibMap.root' # used  only if SubmitFurtherIterationsFromExisting is True
 SystOrNot = 0 # can be 0, 1 or 2 to run on all (default), even or odd events. It works only if you submit this new iteration from an existing one, therefore SubmitFurtherIterationsFromExisting must be set true. Tipically 0 is the default and has no real effect, it is like submitting usual iterations.  
 
 #N files
@@ -116,21 +116,21 @@ EE_Seed_E    = '1.0' #1.5 for 40PU25
 CutOnHLTIso = "True"
 if(Are_pi0):
    #inner barrel
-   Pi0PtCutEB_low = '2.0' #2.0
-   gPtCutEB_low = '0.65' #0.65
+   Pi0PtCutEB_low = '1.5'  # 2.0
+   gPtCutEB_low = '0.5'  # 0.65
    Pi0IsoCutEB_low = '0.2'
    Pi0HLTIsoCutEB_low = "0.5"
-   nXtal_1_EB_low = '7'
-   nXtal_2_EB_low = '7'
-   S4S9_EB_low = '0.88' #0.83
+   nXtal_1_EB_low = '6'
+   nXtal_2_EB_low = '6'
+   S4S9_EB_low = '0.65'  # 0.88
    #outer barrel 
-   Pi0PtCutEB_high = '1.75' # 1.75
-   gPtCutEB_high = '0.65' #0.65
+   Pi0PtCutEB_high = '1.5'  # 1.75
+   gPtCutEB_high = '0.5'  # 0.65
    Pi0IsoCutEB_high = '0.2'
    Pi0HLTIsoCutEB_high = '0.5'
-   nXtal_1_EB_high = '7'
-   nXtal_2_EB_high = '7'
-   S4S9_EB_high = '0.9' #0.83
+   nXtal_1_EB_high = '6'
+   nXtal_2_EB_high = '6'
+   S4S9_EB_high = '0.65'  # 0.92
    #low eta EE
    Pi0PtCutEE_low = '3.75'
    gPtCutEE_low = '1.1'
@@ -149,37 +149,37 @@ if(Are_pi0):
    S4S9_EE_high = '0.92'
    if MakeNtuple4optimization and not useCalibrationSelection:
    #inner barrel
-      Pi0PtCutEB_low = '0.0'
+      Pi0PtCutEB_low = '1.5'
       gPtCutEB_low = '0.5'
-      Pi0IsoCutEB_low = '0.0'
+      Pi0IsoCutEB_low = '0.2'
       Pi0HLTIsoCutEB_low = "0.5"
-      nXtal_1_EB_low = '4'
-      nXtal_2_EB_low = '4'
-      S4S9_EB_low = '0.75'
+      nXtal_1_EB_low = '6'
+      nXtal_2_EB_low = '6'
+      S4S9_EB_low = '0.65'
       #outer barrel 
-      Pi0PtCutEB_high = '0.0'
+      Pi0PtCutEB_high = '1.5'
       gPtCutEB_high = '0.5'
-      Pi0IsoCutEB_high = '0.0'
+      Pi0IsoCutEB_high = '0.2'
       Pi0HLTIsoCutEB_high = '0.5'
-      nXtal_1_EB_high = '4'
-      nXtal_2_EB_high = '4'
-      S4S9_EB_high = '0.75'
+      nXtal_1_EB_high = '6'
+      nXtal_2_EB_high = '6'
+      S4S9_EB_high = '0.65'
       #low eta EE
       Pi0PtCutEE_low = '0.0'
-      gPtCutEE_low = '0.5'
+      gPtCutEE_low = '0.0'
       Pi0IsoCutEE_low = '0.0'
       Pi0HLTIsoCutEE_low = '0.5'
-      nXtal_1_EE_low = '4'
-      nXtal_2_EE_low = '4'
-      S4S9_EE_low = '0.75'
+      nXtal_1_EE_low = '6'
+      nXtal_2_EE_low = '6'
+      S4S9_EE_low = '0.85'
       #high eta EE
       Pi0PtCutEE_high = '0.0'
-      gPtCutEE_high = '0.5'
+      gPtCutEE_high = '0.0'
       Pi0IsoCutEE_high = '0.0'
       Pi0HLTIsoCutEE_high = '0.5'
-      nXtal_1_EE_high = '4'
-      nXtal_2_EE_high = '4'
-      S4S9_EE_high = '0.75'
+      nXtal_1_EE_high = '6'
+      nXtal_2_EE_high = '6'
+      S4S9_EE_high = '0.92'
       if useStreamSelection:
       #inner barrel
          Pi0PtCutEB_low = '2.0'
@@ -357,7 +357,7 @@ scalingEoverEtrueCC_g2 = '1.0' # for 2018
 #
 if ContainmentCorrection == 'EoverEtrue':  # in this case it is better to undefine MVA_REGRESSIO in FillEpsilonPlot.h
    useContainmentCorrectionsFromEoverEtrue = True
-   fileEoverEtrueContainmentCorrections = "root://eoscms//eos/cms/store/group/dpg_ecal/alca_ecalcalib/piZero_Run2/mciprian/pi0CC_2018_EoverEtrue_foldSM_nFit10_onlyEB_fixGamma2EoverEtrue/iter_0/pi0CC_2018_EoverEtrue_foldSM_nFit10_onlyEB_fixGamma2EoverEtrue_calibMap.root"
+   fileEoverEtrueContainmentCorrections = "root://cms-xrd-global.cern.ch//eos/cms/store/group/dpg_ecal/alca_ecalcalib/piZero_Run2/mciprian/pi0CC_2018_EoverEtrue_foldSM_nFit10_onlyEB_fixGamma2EoverEtrue/iter_0/pi0CC_2018_EoverEtrue_foldSM_nFit10_onlyEB_fixGamma2EoverEtrue_calibMap.root"
    #fileEoverEtrueContainmentCorrections = "root://eoscms//eos/cms/store/group/dpg_ecal/alca_ecalcalib/piZero2017/mciprian/pi0Gun_MC_EoverEtrue_foldSM_v4/iter_0/pi0Gun_MC_EoverEtrue_foldSM_v4_calibMap.root"
    #fileEoverEtrueContainmentCorrections = "/afs/cern.ch/user/m/mciprian/www/pi0calib/CC_EoverEtrue/product_CC/pi0Gun_MC_EoverEtrue_foldSM_v4_iter1/ContainmentCorrections_EoverEtrue.root"
    #fileEoverEtrueContainmentCorrections = "root://eoscms//eos/cms/store/group/dpg_ecal/alca_ecalcalib/piZero2017/mciprian/pi0Gun_MCV2_EoverEtrue_foldSM/iter_0/pi0Gun_MCV2_EoverEtrue_foldSM_calibMap.root"
@@ -404,7 +404,8 @@ triggerTag         = 'InputTag("TriggerResults","","HLT")' if isMC==False else '
 L1GTobjmapTag      = 'InputTag("hltGtStage2Digis")' if isMC==False else 'InputTag("gtStage2Digis","","RECO")' # this takes the BXVector<GlobalAlgBlk> for L1 trigger info
 useHLTFilter       = "True" if isMC==False else "False"  # Add to the path the request of a HLT path:  process.AlcaP0Filter.HLTPaths = 
 correctHits        = 'False' # this seems to add obsolete code, keep False
-globaltag          = '123X_dataRun3_Prompt_v12'  if isMC==False else '123X_mcRun2_asymptotic_v1' 
+# globaltag          = '150X_dataRun3_v2'  if isMC==False else '123X_mcRun2_asymptotic_v1'
+globaltag          = '150X_dataRun3_HLT_v1'  if isMC==False else '123X_mcRun2_asymptotic_v1'  # global tag used for 2025G dataset
 FROMDIGI           = True if isMC==False else False
 if runCalibrationFromRecHits:
    FROMDIGI = False
@@ -431,10 +432,14 @@ if(FROMDIGI):
    eeInputTag = 'InputTag("ecalRecHit","EcalRecHitsEE","analyzerFillEpsilon")'
    if(Are_pi0): 
       EBdigi = 'InputTag("hltAlCaPi0EBRechitsToDigis","pi0EBDigis")'
+      # EBdigi = 'InputTag("hltEcalPhiSymFilter","phiSymEcalDigisEB")'
       EEdigi = 'InputTag("hltAlCaPi0EERechitsToDigis","pi0EEDigis")'
+      # EEdigi = 'InputTag("hltEcalPhiSymFilter","phiSymEcalDigisEE")'
    else:
       EBdigi = 'InputTag("hltAlCaEtaEBRechitsToDigis","etaEBDigis")'
+      # EBdigi = 'InputTag("hltEcalPhiSymFilter","phiSymEcalDigisEB")'
       EEdigi = 'InputTag("hltAlCaEtaEERechitsToDigis","etaEEDigis")'
+      # EEdigi = 'InputTag("hltEcalPhiSymFilter","phiSymEcalDigisEE")'
 else:
    if isMC:
       ebInputTag = 'InputTag("ecalRecHit","EcalRecHitsEB","RECO")'

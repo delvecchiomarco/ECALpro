@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 ## check if a file is good on eos, and delete it if it is not good
 # the file name should be of the form /eos/cms/... or root://eoscms//eos/cms
@@ -21,44 +21,44 @@ if len(args)<1:
     parser.print_usage()
     quit()
 
-print ""
+print("")
 eosFile = args[0]
 eosFileNameToOpen = eosFile
-if eosFileNameToOpen.startswith("/eos/cms"):
-    eosFileNameToOpen = "root://eoscms/" + eosFile
-elif not eosFileNameToOpen.startswith("root://eoscms//eos/cms"):
-    print "Error: file name in input not valid, must start with /eos/cms or root://eoscms//eos/cms"
-    quit()
+# if eosFileNameToOpen.startswith("/eos/cms"):
+#     eosFileNameToOpen = "root://eoscms/" + eosFile
+# elif not eosFileNameToOpen.startswith("root://eoscms//eos/cms"):
+#     print("Error: file name in input not valid, must start with /eos/cms or root://eoscms//eos/cms")
+#     sys.exit(1)
 
 isGood = True
 sizeThreshold = 1024 * options.sizeThreshold
 
 filesize=0
-if os.path.exists(eosFile): 
+if os.path.exists(eosFile):
     filesize = os.path.getsize(eosFile)
 if filesize < sizeThreshold:
-    print "%%% size is too small"
+    print("%%% size is too small")
     isGood = False
 else:
     tf = ROOT.TFile.Open(eosFileNameToOpen)
-    if not tf or tf.IsZombie(): 
-        print "%%% file is zombie"
+    if not tf or tf.IsZombie():
+        print("%%% file is zombie")
         isGood = False
-    elif tf.TestBit(ROOT.TFile.kRecovered):                    
-        print "%%% file was recovered"
+    elif tf.TestBit(ROOT.TFile.kRecovered):
+        print("%%% file was recovered")
         isGood = False
+        tf.Close()
+    else:
         tf.Close()
                     
 if isGood:
-    print ">>> Check successful: file is good on EOS"
+    print(">>> Check successful: file is good on EOS")
 else:
-    print "#### File is bad or non existing."
-    if options.delete: 
-        print "### Will be deleted if existing"
+    print("#### File is bad or non existing.")
+    if options.delete:
+        print("### Will be deleted if existing")
         if not ROOT.gSystem.AccessPathName(eosFile):
-            # file exists, let's delete it
-            # gSystem.Exec("rm " + eosFile)  
-            ROOT.gSystem.Unlink(eosFile) # this works also for non-Unix systems, just in case
+            ROOT.gSystem.Unlink(eosFile)
 
-print ""
+print("")
 

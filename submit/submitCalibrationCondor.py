@@ -1,128 +1,104 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 import subprocess, time, sys, os
 from methods import *
 from datetime import datetime
 
 from optparse import OptionParser                                                                                                                   
-                                                                                          
+
 parser = OptionParser(usage="%prog [options]")    
-parser.add_option("-c", "--create",           dest="create", action="store_true", default=False, help="Do not submit the jobs, only create the subfolders")
-parser.add_option("-l", "--daemon-local",     dest="daemonLocal", action="store_true", default=False, help="Do not submit a job to manage the daemon, do it locally")
-parser.add_option(      "--recover-fill",     dest="recoverFill", action="store_true", default=False, help="Before moving to the  hadd part of the calibration, first try to recover failed fills")
-parser.add_option("-t", "--token-file", dest="tokenFile",  type="string", default="", help="File needed to renew token (when daemon running locally)")
-parser.add_option("--min-efficiency-recover-fill",   dest="minEfficiencyToRecoverFill",   type="float", default=0.97, help="Tolerance of EcalNtp loss. Require fraction of good EcalNtp above this number to skip recover");
+parser.add_option("-c", "--create", dest="create", action="store_true", default=False, help="Do not submit the jobs, only create the subfolders")
+parser.add_option("-l", "--daemon-local", dest="daemonLocal", action="store_true", default=False, help="Do not submit a job to manage the daemon, do it locally")
+parser.add_option("--recover-fill", dest="recoverFill", action="store_true", default=False, help="Before moving to the hadd part of the calibration, first try to recover failed fills")
+parser.add_option("-t", "--token-file", dest="tokenFile", type="string", default="", help="File needed to renew token (when daemon running locally)")
+parser.add_option("--min-efficiency-recover-fill", dest="minEfficiencyToRecoverFill", type="float", default=0.97, help="Tolerance of EcalNtp loss. Require fraction of good EcalNtp above this number to skip recover")
 (options, args) = parser.parse_args()
 pwd = os.getcwd()
 
 if ContainmentCorrection == '2017reg':
-	os.system("cp /eos/cms/store/group/dpg_ecal/alca_ecalcalib/piZero2017/zhicaiz/GBRForest_2017/* ../FillEpsilonPlot/data/")
+    os.system("cp /eos/cms/store/group/dpg_ecal/alca_ecalcalib/piZero2017/zhicaiz/GBRForest_2017/* ../FillEpsilonPlot/data/")
 
 #-------- create folders --------#
 
-workdir = pwd+'/'+dirname
-condordir = workdir + "/condor_files/"
-cfgFillPath = workdir + '/cfgFile/Fill'
-cfgFitPath  = workdir + '/cfgFile/Fit'
-cfgHaddPath  = workdir + '/src/hadd'
-srcPath  = workdir + '/src'
+workdir = f"{pwd}/{dirname}"
+condordir = f"{workdir}/condor_files"
+cfgFillPath = f"{workdir}/cfgFile/Fill"
+cfgFitPath  = f"{workdir}/cfgFile/Fit"
+cfgHaddPath = f"{workdir}/src/hadd"
+srcPath = f"{workdir}/src"
 
-print "[calib] Creating local folders (" + dirname + ")"
-folderCreation = subprocess.Popen(['mkdir -p ' + workdir], stdout=subprocess.PIPE, shell=True);
-folderCreation.communicate()
-folderCreation = subprocess.Popen(['mkdir -p ' + condordir], stdout=subprocess.PIPE, shell=True);
-folderCreation.communicate()
+print(f"[calib] Creating local folders ({dirname})")
+subprocess.run(['mkdir', '-p', workdir])
+subprocess.run(['mkdir', '-p', condordir])
 for it in range(nIterations):
-    folderCreation = subprocess.Popen(['mkdir -p ' + condordir + "/iter_" + str(it)], stdout=subprocess.PIPE, shell=True);
-    folderCreation.communicate()
-folderCreation = subprocess.Popen(['mkdir -p ' + workdir + '/cfgFile/'], stdout=subprocess.PIPE, shell=True);
-folderCreation.communicate()
-folderCreation = subprocess.Popen(['mkdir -p ' + workdir + '/CRAB_files/'], stdout=subprocess.PIPE, shell=True);
-folderCreation.communicate()
+    subprocess.run(['mkdir', '-p', f"{condordir}/iter_{it}"])
+subprocess.run(['mkdir', '-p', f"{workdir}/cfgFile"])
+subprocess.run(['mkdir', '-p', f"{workdir}/CRAB_files"])
 for it in range(nIterations):
-    folderCreation = subprocess.Popen(['mkdir -p ' + cfgFillPath + '/iter_' + str(it)], stdout=subprocess.PIPE, shell=True);
-    folderCreation.communicate()
-folderCreation = subprocess.Popen(['mkdir -p ' + cfgFitPath], stdout=subprocess.PIPE, shell=True);
-folderCreation.communicate()
-# created in calibJobHandlerCondor.py to follow the flow from local folders
-#for it in range(nIterations):    
-#    for dirtype in ["Fill", "Hadd", "Final_Hadd", "Fit"]:
-#        folderCreation = subprocess.Popen(['mkdir -p ' + workdir + '/log/' + dirtype + '/iter_' + str(it)], stdout=subprocess.PIPE, shell=True);
-#        folderCreation.communicate()
-folderCreation = subprocess.Popen(['mkdir -p ' + srcPath ], stdout=subprocess.PIPE, shell=True);
-folderCreation.communicate()
+    subprocess.run(['mkdir', '-p', f"{cfgFillPath}/iter_{it}"])
+subprocess.run(['mkdir', '-p', cfgFitPath])
+subprocess.run(['mkdir', '-p', srcPath])
 for it in range(nIterations):
-    folderCreation = subprocess.Popen(['mkdir -p ' + srcPath + '/Fill/iter_' + str(it)], stdout=subprocess.PIPE, shell=True);
-    folderCreation.communicate()
-folderCreation = subprocess.Popen(['mkdir -p ' + srcPath + '/Fit'], stdout=subprocess.PIPE, shell=True);
-folderCreation.communicate()
-folderCreation = subprocess.Popen(['mkdir -p ' + srcPath + '/hadd'], stdout=subprocess.PIPE, shell=True);
-folderCreation.communicate()
+    subprocess.run(['mkdir', '-p', f"{srcPath}/Fill/iter_{it}"])
+subprocess.run(['mkdir', '-p', f"{srcPath}/Fit"])
+subprocess.run(['mkdir', '-p', f"{srcPath}/hadd"])
 
-print "[calib] Storing parameter.py for future reference"
-CopyParam = subprocess.Popen(['cp  parameters.py ' + workdir], stdout=subprocess.PIPE, shell=True);
-CopyParam.communicate()
+print("[calib] Storing parameters.py for future reference")
+subprocess.run(['cp', 'parameters.py', workdir])
 
-if( isOtherT2 and storageSite=="T2_BE_IIHE" and isCRAB ):
-   print "[calib] Creating folders on PNFS"
-   folderCreation = subprocess.Popen(['srmmkdir srm://maite.iihe.ac.be:8443' + eosPath + '/' + dirname ], stdout=subprocess.PIPE, shell=True);
-   folderCreation.communicate()
+# Create folders on EOS / PNFS
+if isOtherT2 and storageSite == "T2_BE_IIHE" and isCRAB:
+    print("[calib] Creating folders on PNFS")
+    subprocess.run(['srmmkdir', f"srm://maite.iihe.ac.be:8443{eosPath}/{dirname}"])
 else:
-   print "[calib] Creating folders on EOS"
-   folderCreation = subprocess.Popen(['mkdir -p ' + eosPath + '/' + dirname ], stdout=subprocess.PIPE, shell=True);
-   folderCreation.communicate()
+    print("[calib] Creating folders on EOS")
+    subprocess.run(['mkdir', '-p', f"{eosPath}/{dirname}"])
 
 for it in range(nIterations):
-    if( isOtherT2 and storageSite=="T2_BE_IIHE" and isCRAB ):
-       print "[calib]  ---  srmmkdir " + eosPath + '/' + dirname + '/iter_' + str(it)
-       folderCreation = subprocess.Popen(['srmmkdir srm://maite.iihe.ac.be:8443' + eosPath + '/' + dirname + '/iter_' + str(it)], stdout=subprocess.PIPE, shell=True);
-       folderCreation.communicate()
+    if isOtherT2 and storageSite == "T2_BE_IIHE" and isCRAB:
+        print(f"[calib]  ---  srmmkdir {eosPath}/{dirname}/iter_{it}")
+        subprocess.run(['srmmkdir', f"srm://maite.iihe.ac.be:8443{eosPath}/{dirname}/iter_{it}"])
     else:
-       print "[calib]  ---  mkdir " + eosPath + '/' + dirname + '/iter_' + str(it)
-       folderCreation = subprocess.Popen(['mkdir ' + eosPath + '/' + dirname + '/iter_' + str(it)], stdout=subprocess.PIPE, shell=True);
-       folderCreation.communicate()
+        print(f"[calib]  ---  mkdir {eosPath}/{dirname}/iter_{it}")
+        subprocess.run(['mkdir', '-p', f"{eosPath}/{dirname}/iter_{it}"])
 
 #-------- fill cfg files --------#
-if( isCRAB ):
-    print "--------------This inter-calibration will use CRAB: Good Luck!------------------------"
+if isCRAB:
+    print("--------------This inter-calibration will use CRAB: Good Luck!------------------------")
 
 # open list of input files
-inputlist_f = open( inputlist_n )
-# read the list containing all the input files
-inputlistbase_v = [x for x in inputlist_f.readlines() if not x.lstrip().startswith('#')]  # do not consider commented line
+with open(inputlist_n) as inputlist_f:
+    inputlistbase_v = [x for x in inputlist_f if not x.lstrip().startswith('#')]
 
-print "[calib] Total number of files to be processed: " , len(inputlistbase_v)
-print "[calib] Creating cfg Files"
+print(f"[calib] Total number of files to be processed: {len(inputlistbase_v)}")
+print("[calib] Creating cfg Files")
 
 ijob = 0
 for it in range(nIterations):
-    print "[calib]  '-- Fill::Iteration " + str(it)
-    # copy by value and not by reference
+    print(f"[calib]  '-- Fill::Iteration {it}'")
     inputlist_v = inputlistbase_v[:]
-    ijob=0
+    ijob = 0
 
-    # Creating different list for hadd
     NrelJob = float(len(inputlist_v)) / float(ijobmax)
-    if( float(int(NrelJob) - NrelJob) < 0. ):
+    if (int(NrelJob) - NrelJob) < 0.:
         NrelJob = int(NrelJob) + 1
-    Nlist_flo = float(NrelJob/nHadd) + 1.
-    Nlist = int(Nlist_flo)
+    Nlist = int(NrelJob / nHadd + 1.0)
 
-    haddSrc_n_s = list()
-    haddSrc_f_s = list()
+    haddSrc_n_s = []
+    haddSrc_f_s = []
 
-    print "[calib]  '-- Hadd::Number of hadd tasks: " + str(Nlist) + "  (" + str(nHadd) + " files per task)"
+    print(f"[calib]  '-- Hadd::Number of hadd tasks: {Nlist}  ({nHadd} files per task)'")
 
-    haddSrc_final_n_s = srcPath + "/hadd/hadd_iter_" + str(it) + "_final.list"
-    haddSrc_final_f_s = open(  haddSrc_final_n_s, 'w')
+    haddSrc_final_n_s = f"{srcPath}/hadd/hadd_iter_{it}_final.list"
+    haddSrc_final_f_s = open(haddSrc_final_n_s, 'w')
     for num_list in range(Nlist):
-        haddSrc_n_s.append( srcPath + "/hadd/hadd_iter_" + str(it) + "_step_" + str(num_list)+ ".list")
-        haddSrc_f_s.append( open(  haddSrc_n_s[num_list], 'w') )
-        fileToAdd_final_n_s = eosPath + '/' + dirname + '/iter_' + str(it) + '/' + NameTag + 'epsilonPlots_' + str(num_list) + '.root\n'
+        haddSrc_n_s.append(f"{srcPath}/hadd/hadd_iter_{it}_step_{num_list}.list")
+        haddSrc_f_s.append(open(haddSrc_n_s[num_list], 'w'))
+        fileToAdd_final_n_s = f"{eosPath}/{dirname}/iter_{it}/{NameTag}epsilonPlots_{num_list}.root\n"
         for nj in range(nHadd):
-            nEff = num_list*nHadd+nj
-            fileToAdd_n_s = eosPath + '/' + dirname + '/iter_' + str(it) + '/' + NameTag + outputFile + '_' + str(nEff) + '.root\n'
-            if(nEff < NrelJob) :
+            nEff = num_list*nHadd + nj
+            fileToAdd_n_s = f"{eosPath}/{dirname}/iter_{it}/{NameTag}{outputFile}_{nEff}.root\n"
+            if nEff < NrelJob:
                 haddSrc_f_s[num_list].write(fileToAdd_n_s)
         haddSrc_final_f_s.write(fileToAdd_final_n_s)
         haddSrc_f_s[num_list].close()
@@ -132,24 +108,23 @@ for it in range(nIterations):
     dest = eosPath + '/' + dirname + '/iter_' + str(it) + '/'
     for num_list in range(Nlist):
         hadd_cfg_n = cfgHaddPath + "/HaddCfg_iter_" + str(it) + "_job_" + str(num_list) + ".sh"
-        hadd_cfg_f = open( hadd_cfg_n, 'w' )
+        hadd_cfg_f = open( hadd_cfg_n, 'w')
         HaddOutput = NameTag + "epsilonPlots_" + str(num_list) + ".root"
-        printParallelHaddFAST(hadd_cfg_f, HaddOutput, haddSrc_n_s[num_list], dest, pwd, num_list )
+        printParallelHaddFAST(hadd_cfg_f, HaddOutput, haddSrc_n_s[num_list], dest, pwd, num_list)
         hadd_cfg_f.close()
-        changePermission = subprocess.Popen(['chmod 777 ' + hadd_cfg_n], stdout=subprocess.PIPE, shell=True);
-        debugout = changePermission.communicate()
+        subprocess.run(["chmod", "777", hadd_cfg_n], check=True)
     # print Final hadd
     Fhadd_cfg_n = cfgHaddPath + "/Final_HaddCfg_iter_" + str(it) + ".sh"
-    Fhadd_cfg_f = open( Fhadd_cfg_n, 'w' )
-    printFinalHaddRegroup(Fhadd_cfg_f, haddSrc_final_n_s, dest, pwd )
+    Fhadd_cfg_f = open( Fhadd_cfg_n, 'w')
+    printFinalHaddRegroup(Fhadd_cfg_f, haddSrc_final_n_s, dest, pwd)
     Fhadd_cfg_f.close()
     # loop over the whole list
     while (len(inputlist_v) > 0):
 
         # create cfg file
         fill_cfg_n = cfgFillPath + "/iter_" + str(it) + "/fillEps_iter_" + str(it) + "_job_" + str(ijob) + ".py"
-        print "\tWriting " + fill_cfg_n + " ..."
-        fill_cfg_f = open( fill_cfg_n, 'w' )
+        print(f"\tWriting {fill_cfg_n} ...")
+        fill_cfg_f = open(fill_cfg_n, 'w')
 
         # print first part of the cfg file
         printFillCfg1( fill_cfg_f )
@@ -192,187 +167,151 @@ for it in range(nIterations):
 njobs = ijob
 
 #-------- fit cfg files --------#
-    # Fit parallelized
-nEBindependentXtals = 1699 if foldInSuperModule else 61199  # this is actual number -1 (imagine it is a counter that starts from 0)
-nEB = nEBindependentXtals/nFit
-if (nEBindependentXtals%nFit != 0) :
-    nEB = int(nEB) +1
-nEE = 14647/nFit
-if (14647%nFit != 0) :
-    nEE = int(nEE) +1
+nEBindependentXtals = 1699 if foldInSuperModule else 61199
+nEB = nEBindependentXtals // nFit
+if nEBindependentXtals % nFit != 0:
+    nEB += 1
+nEE = 14647 // nFit
+if 14647 % nFit != 0:
+    nEE += 1
 
 if Barrel_or_Endcap == "ONLY_ENDCAP": nEB = 0
 if Barrel_or_Endcap == "ONLY_BARREL": nEE = 0
 
-print '[calib] Splitting Fit Task: ' + str(nEB) + ' jobs on EB, ' + str(nEE) + ' jobs on EE'
-#print 'I will submit ' + str(nEB) + ' jobs to fit the Barrel'
-#print 'I will submit ' + str(nEE) + ' jobs to fit the Endcap'
-print '[calib] Creating Fit cfg files'
-inListB = list()
-finListB = list()
-inListE = list()
-finListE = list()
-for tmp in range(nEB):
-    inListB.append( nFit*tmp )
-    finListB.append( nFit*tmp+(nFit-1) )
-for tmp in range(nEE):
-    inListE.append( nFit*tmp )
-    finListE.append( nFit*tmp+(nFit-1) )
-    # cfg
+print(f'[calib] Splitting Fit Task: {nEB} jobs on EB, {nEE} jobs on EE')
+print('[calib] Creating Fit cfg files')
+
+inListB = [nFit*tmp for tmp in range(nEB)]
+finListB = [nFit*tmp+(nFit-1) for tmp in range(nEB)]
+inListE = [nFit*tmp for tmp in range(nEE)]
+finListE = [nFit*tmp+(nFit-1) for tmp in range(nEE)]
+
 for it in range(nIterations):
-    print "[calib]  '-- Fit::Iteration " + str(it)
-    
+    print(f"[calib]  '-- Fit::Iteration {it}'")
+
     if foldInSuperModule:
-        # create cfg file for folding (done in the fit analyzer)
-        fit_cfg_n = cfgFitPath + "/fitEpsilonPlot_justFoldSM_iter_" + str(it) + ".py"
-        fit_cfg_f = open( fit_cfg_n, 'w' )
-        # print the cfg file
-        printFitCfg( fit_cfg_f , it, "/tmp",0,0,"Barrel",0,justDoHistogramFolding=True)
-        fit_cfg_f.close()
-        # print source file for batch submission of FitEpsilonPlot task
-        fitSrc_n = srcPath + "/Fit/submit_justFoldSM_iter_" + str(it) + ".sh"
-        fitSrc_f = open( fitSrc_n, 'w')
-        destination_s = eosPath + '/' + dirname + '/iter_' + str(it) + "/" + NameTag + "Barrel_" + str(nFit)+ "_" + calibMapName
-        logpath = pwd + "/" + dirname + "/log/" + "fitEpsilonPlot_justFoldSM_iter_" + str(it) + ".log"
-        printSubmitFitSrc(fitSrc_f, fit_cfg_n, "/tmp/" + NameTag + "justFoldSM_" + calibMapName, destination_s, pwd, logpath, justDoHistogramFolding=True)
-        fitSrc_f.close()
+        fit_cfg_n = cfgFitPath + f"/fitEpsilonPlot_justFoldSM_iter_{it}.py"
+        with open(fit_cfg_n, 'w') as fit_cfg_f:
+            printFitCfg(fit_cfg_f, it, "/tmp", 0, 0, "Barrel", 0, justDoHistogramFolding=True)
 
-        # make the source file executable
-        changePermission = subprocess.Popen(['chmod 777 ' + fitSrc_n], stdout=subprocess.PIPE, shell=True);
-        debugout = changePermission.communicate()
+        fitSrc_n = srcPath + f"/Fit/submit_justFoldSM_iter_{it}.sh"
+        with open(fitSrc_n, 'w') as fitSrc_f:
+            destination_s = f"{eosPath}/{dirname}/iter_{it}/{NameTag}Barrel_{nFit}_{calibMapName}"
+            logpath = f"{pwd}/{dirname}/log/fitEpsilonPlot_justFoldSM_iter_{it}.log"
+            printSubmitFitSrc(
+                fitSrc_f,
+                fit_cfg_n,
+                f"/tmp/{NameTag}justFoldSM_{calibMapName}",
+                destination_s,
+                pwd,
+                logpath,
+                justDoHistogramFolding=True
+            )
 
+        subprocess.run(['chmod', '777', fitSrc_n], check=True)
 
     for nFit in range(nEB):
-        # create cfg file
-        fit_cfg_n = cfgFitPath + "/fitEpsilonPlot_EB_" + str(nFit) + "_iter_" + str(it) + ".py"
-        fit_cfg_f = open( fit_cfg_n, 'w' )
+        fit_cfg_n = cfgFitPath + f"/fitEpsilonPlot_EB_{nFit}_iter_{it}.py"
+        with open(fit_cfg_n, 'w') as fit_cfg_f:
+            printFitCfg(fit_cfg_f, it, "/tmp", inListB[nFit], finListB[nFit], "Barrel", nFit)
 
-        # print the cfg file
-        printFitCfg( fit_cfg_f , it, "/tmp",inListB[nFit],finListB[nFit],"Barrel",nFit)
-        fit_cfg_f.close()
+        fitSrc_n = srcPath + f"/Fit/submit_EB_{nFit}_iter_{it}.sh"
+        with open(fitSrc_n, 'w') as fitSrc_f:
+            destination_s = f"{eosPath}/{dirname}/iter_{it}/{NameTag}Barrel_{nFit}_{calibMapName}"
+            logpath = f"{pwd}/{dirname}/log/fitEpsilonPlot_EB_{nFit}_iter_{it}.log"
+            tmpdir = "$TMPDIR" if (isOtherT2 and storageSite=="T2_BE_IIHE" and isCRAB) else "/tmp"
+            printSubmitFitSrc(
+                fitSrc_f,
+                fit_cfg_n,
+                f"{tmpdir}/{NameTag}Barrel_{nFit}_{calibMapName}",
+                destination_s,
+                pwd,
+                logpath
+            )
 
-        # print source file for batch submission of FitEpsilonPlot task
-        fitSrc_n = srcPath + "/Fit/submit_EB_" + str(nFit) + "_iter_" + str(it) + ".sh"
-        fitSrc_f = open( fitSrc_n, 'w')
-        destination_s = eosPath + '/' + dirname + '/iter_' + str(it) + "/" + NameTag + "Barrel_" + str(nFit)+ "_" + calibMapName
-        logpath = pwd + "/" + dirname + "/log/" + "fitEpsilonPlot_EB_" + str(nFit) + "_iter_" + str(it) + ".log"
-        if( isOtherT2 and storageSite=="T2_BE_IIHE" and isCRAB ):
-            printSubmitFitSrc(fitSrc_f, fit_cfg_n, "$TMPDIR/" + NameTag + "Barrel_" + str(nFit) + "_" + calibMapName, destination_s, pwd, logpath)
-        else:
-            printSubmitFitSrc(fitSrc_f, fit_cfg_n, "/tmp/" + NameTag + "Barrel_" + str(nFit) + "_" + calibMapName, destination_s, pwd, logpath)
-        fitSrc_f.close()
-
-        # make the source file executable
-        changePermission = subprocess.Popen(['chmod 777 ' + fitSrc_n], stdout=subprocess.PIPE, shell=True);
-        debugout = changePermission.communicate()
+        subprocess.run(['chmod', '777', fitSrc_n], check=True)
 
     for nFit in range(nEE):
-        # create cfg file
-        fit_cfg_n = cfgFitPath + "/fitEpsilonPlot_EE_" + str(nFit) + "_iter_" + str(it) + ".py"
-        fit_cfg_f = open( fit_cfg_n, 'w' )
+        fit_cfg_n = cfgFitPath + f"/fitEpsilonPlot_EE_{nFit}_iter_{it}.py"
+        with open(fit_cfg_n, 'w') as fit_cfg_f:
+            printFitCfg(fit_cfg_f, it, "/tmp", inListE[nFit], finListE[nFit], "Endcap", nFit)
 
-        # print the cfg file
-        printFitCfg( fit_cfg_f , it, "/tmp",inListE[nFit],finListE[nFit],"Endcap",nFit)
+        fitSrc_n = srcPath + f"/Fit/submit_EE_{nFit}_iter_{it}.sh"
+        with open(fitSrc_n, 'w') as fitSrc_f:
+            destination_s = f"{eosPath}/{dirname}/iter_{it}/{NameTag}Endcap_{nFit}_{calibMapName}"
+            logpath = f"{pwd}/{dirname}/log/fitEpsilonPlot_EE_{nFit}_iter_{it}.log"
+            tmpdir = "$TMPDIR" if (isOtherT2 and storageSite=="T2_BE_IIHE" and isCRAB) else "/tmp"
+            printSubmitFitSrc(
+                fitSrc_f,
+                fit_cfg_n,
+                f"{tmpdir}/{NameTag}Endcap_{nFit}_{calibMapName}",
+                destination_s,
+                pwd,
+                logpath
+            )
 
-        fit_cfg_f.close()
+        subprocess.run(['chmod', '777', fitSrc_n], check=True)
 
-        # print source file for batch submission of FitEpsilonPlot task
-        fitSrc_n = srcPath + "/Fit/submit_EE_" + str(nFit) + "_iter_" + str(it) + ".sh"
-        fitSrc_f = open( fitSrc_n, 'w')
-        destination_s = eosPath + '/' + dirname + '/iter_' + str(it) + "/" + NameTag + "Endcap_" + str(nFit) + "_" + calibMapName
-        logpath = pwd + "/" + dirname + "/log/" + "fitEpsilonPlot_EE_" + str(nFit) + "_iter_" + str(it) + ".log"
-        if( isOtherT2 and storageSite=="T2_BE_IIHE" and isCRAB ):
-            printSubmitFitSrc(fitSrc_f, fit_cfg_n, "$TMPDIR/" + NameTag + "Endcap_" + str(nFit)+ "_" + calibMapName, destination_s, pwd, logpath)
-        else:
-            printSubmitFitSrc(fitSrc_f, fit_cfg_n, "/tmp/" + NameTag + "Endcap_" + str(nFit)+ "_" + calibMapName, destination_s, pwd, logpath)
-        fitSrc_f.close()
-
-        # make the source file executable
-        changePermission = subprocess.Popen(['chmod 777 ' + fitSrc_n], stdout=subprocess.PIPE, shell=True);
-        debugout = changePermission.communicate()
-
-#build command with options and arguments
-calibCMD = "python3 " + pwd + "/calibJobHandlerCondor.py -n " + str(njobs)
-if options.recoverFill: calibCMD += " --recover-fill "
-if options.daemonLocal: calibCMD += " --daemon-local "
-if options.tokenFile:   calibCMD += " --token-file {tf}".format(tf=options.tokenFile)
+# build command with options and arguments
+calibCMD = f"python3 {pwd}/calibJobHandlerCondor.py -n {ijob}"
+if options.recoverFill: calibCMD += " --recover-fill"
+if options.daemonLocal: calibCMD += " --daemon-local"
+if options.tokenFile:   calibCMD += f" --token-file {options.tokenFile}"
 if options.minEfficiencyToRecoverFill >= 0.0:
-        calibCMD += (" --min-efficiency-recover-fill " + str(options.minEfficiencyToRecoverFill)) 
+    calibCMD += f" --min-efficiency-recover-fill {options.minEfficiencyToRecoverFill}"
 calibCMD += "\n"
 
-### setting environment
-env_script_n = workdir + "/submit.sh"
-env_script_f = open(env_script_n, 'w')
-env_script_f.write("#!/bin/bash\n")
-env_script_f.write("cd " + pwd + "\n")
-env_script_f.write("ulimit -c 0\n")
-env_script_f.write("eval `scramv1 runtime -sh`\n")
-env_script_f.write(calibCMD)
-env_script_f.write( "rm -rf " + pwd + "/core.*\n")
-env_script_f.close()
+# generate submit script
+env_script_n = f"{workdir}/submit.sh"
+with open(env_script_n, 'w') as env_script_f:
+    env_script_f.write("#!/bin/bash\n")
+    env_script_f.write(f"cd {pwd}\n")
+    env_script_f.write("ulimit -c 0\n")
+    env_script_f.write("eval `scramv1 runtime -sh`\n")
+    env_script_f.write(calibCMD)
+    env_script_f.write(f"rm -rf {pwd}/core.*\n")
 
-# make the source file executable
-changePermission = subprocess.Popen(['chmod 777 ' + env_script_n], stdout=subprocess.PIPE, shell=True);
-debugout = changePermission.communicate()
+subprocess.run(['chmod', '777', env_script_n])
 
-dummy_exec = open(condordir+'/dummy_exec_daemon.sh','w')
-dummy_exec.write('#!/bin/bash\n')
-dummy_exec.write('bash $*\n')
-dummy_exec.close()
+# dummy exec for condor
+with open(f"{condordir}/dummy_exec_daemon.sh", 'w') as dummy_exec:
+    dummy_exec.write('#!/bin/bash\n')
+    dummy_exec.write('bash $*\n')
 
-condor_file_name = condordir+'/condor_submit_daemon.condor'
-condor_file = open(condor_file_name,'w')
-# line 'next_job_start_delay = 1' not needed here
-condor_file.write('''Universe = vanilla
-Executable = {de}
+# condor submit file
+condor_file_name = f"{condordir}/condor_submit_daemon.condor"
+with open(condor_file_name, 'w') as condor_file:
+    condor_file.write(f'''Universe = vanilla
+Executable = {os.path.abspath(condordir)}/dummy_exec_daemon.sh
 use_x509userproxy = True
 x509userproxy = $ENV(X509_USER_PROXY)
-Log        = {ld}/$(ProcId).log
-Output     = {ld}/$(ProcId).out
-Error      = {ld}/$(ProcId).error
+Log        = {os.path.abspath(condordir)}/$(ProcId).log
+Output     = {os.path.abspath(condordir)}/$(ProcId).out
+Error      = {os.path.abspath(condordir)}/$(ProcId).error
 getenv      = True
-environment = "LS_SUBCWD={here}"
+environment = "LS_SUBCWD={os.environ['PWD']}"
 request_memory = 4000
 +MaxRuntime = 604800
 +JobBatchName = "ecalpro_daemon"
-'''.format(de=os.path.abspath(dummy_exec.name), ld=os.path.abspath(condordir), here=os.environ['PWD'] ) )
-if os.environ['USER'] in ['mciprian']:
-    # mydate = datetime.today()
-    # month = int(mydate.month)
-    # year  = int(mydate.year)
-    # if month == 10 and year == 2019:
-    #     condor_file.write('+AccountingGroup = "group_u_CMS.u_zh.priority"\n\n')
-    # else:
-    #     condor_file.write('+AccountingGroup = "group_u_CMS.CAF.ALCA"\n\n')
-    condor_file.write('+AccountingGroup = "group_u_CMS.CAF.ALCA"\n\n')
-else:
-    condor_file.write('\n')
+''')
+    if os.environ['USER'] in ['mciprian']:
+        condor_file.write('+AccountingGroup = "group_u_CMS.CAF.ALCA"\n\n')
+    else:
+        condor_file.write('\n')
+    condor_file.write(f'arguments = {os.path.abspath(env_script_n)} \nqueue 1 \n\n')
 
-
-condor_file.write('arguments = {sf} \nqueue 1 \n\n'.format(sf=os.path.abspath(env_script_n)))
-condor_file.close()
-
-
-# configuring calibration handler
-
-submit_s = 'condor_submit {cdf} '.format(cdf=condor_file_name)
+# submit jobs
+submit_s = f'condor_submit {condor_file_name}'
 if not options.create:
-    print "[calib] Number of jobs created = " + str(njobs)
-    print "[calib] Submitting calibration handler"
-    # submitting calibration handler
+    print(f"[calib] Number of jobs created = {ijob}")
+    print("[calib] Submitting calibration handler")
     if options.daemonLocal:
-        print "[calib]  '-- source " + os.path.abspath(env_script_n)
-        os.system("source " + os.path.abspath(env_script_n))
-    else:        
-        print "[calib]  '-- " + submit_s
-        submitJobs = subprocess.Popen([submit_s], stdout=subprocess.PIPE, shell=True);
-        output = (submitJobs.communicate()[0]).splitlines()
-        print "[calib]  '-- " + output[0]
-
-    #    print "usage thisPyton.py pwd njobs queue"
+        print(f"[calib]  '-- source {os.path.abspath(env_script_n)}'")
+        os.system(f"source {os.path.abspath(env_script_n)}")
+    else:
+        print(f"[calib]  '-- {submit_s}'")
+        output = subprocess.run(submit_s, shell=True, capture_output=True, text=True)
+        print(f"[calib]  '-- {output.stdout.splitlines()[0]}'")
 else:
-    print "options -c was given: jobs are not submitted, but all folders and files were created normally. You can still do local tests."
-    print "To run the whole code use the following command."
-    print submit_s
-
-
+    print("options -c was given: jobs are not submitted, but all folders and files were created normally. You can still do local tests.")
+    print(f"To run the whole code use the following command:\n{submit_s}")

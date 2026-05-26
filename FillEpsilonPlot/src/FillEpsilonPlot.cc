@@ -214,6 +214,7 @@ FillEpsilonPlot::FillEpsilonPlot(const edm::ParameterSet& iConfig):
     MC_Assoc_                          = iConfig.getUntrackedParameter<bool>("MC_Assoc",false);
     MC_Assoc_DeltaR                    = iConfig.getUntrackedParameter<double>("MC_Assoc_DeltaR",0.1);
     MakeNtuple4optimization_           = iConfig.getUntrackedParameter<bool>("MakeNtuple4optimization",false);
+    MakeMonitoring_                    = iConfig.getUntrackedParameter<bool>("MakeMonitoring",false);
     GeometryFromFile_                  = iConfig.getUntrackedParameter<bool>("GeometryFromFile",false);
     JSONfile_                          = iConfig.getUntrackedParameter<std::string>("JSONfile","");
 
@@ -456,16 +457,18 @@ FillEpsilonPlot::FillEpsilonPlot(const edm::ParameterSet& iConfig):
     if(!outfile_ or not outfile_->IsOpen()) throw cms::Exception("WritingOutputFile") << "It was no possible to create output file " << fileName << "\n";
 
     ///TTree needed for monitoring having time, day, year info
-    tree_mon = new TTree("monitoring","TTree for monitoring");
-    tree_mon->Branch( "Event",     &myEvent,     "Event/l"); // l is for ULong64_t
-    tree_mon->Branch( "LumiBlock", &myLumiBlock, "LumiBlock/I");
-    tree_mon->Branch( "Run",       &myRun,       "Run/I");
-    tree_mon->Branch( "BunchCrossing",       &myBunchCrossing,       "BunchCrossing/I");
-    tree_mon->Branch( "event_time", &event_time, "even_time/i");
-    tree_mon->Branch( "pi0_mass", &pi0_mass);
-    tree_mon->Branch( "pho1_eta", &pho1_eta);
-    tree_mon->Branch( "pho2_eta", &pho2_eta);
-    tree_mon->Branch( "isPi0EB", &isPi0EB);
+    if (MakeMonitoring_){
+      tree_mon = new TTree("monitoring","TTree for monitoring");
+      tree_mon->Branch( "Event",     &myEvent,     "Event/l"); // l is for ULong64_t
+      tree_mon->Branch( "LumiBlock", &myLumiBlock, "LumiBlock/I");
+      tree_mon->Branch( "Run",       &myRun,       "Run/I");
+      tree_mon->Branch( "BunchCrossing",       &myBunchCrossing,       "BunchCrossing/I");
+      tree_mon->Branch( "event_time", &event_time, "even_time/i");
+      tree_mon->Branch( "pi0_mass", &pi0_mass);
+      tree_mon->Branch( "pho1_eta", &pho1_eta);
+      tree_mon->Branch( "pho2_eta", &pho2_eta);
+      tree_mon->Branch( "isPi0EB", &isPi0EB);
+    }
 
     if(MakeNtuple4optimization_){
 	Tree_Optim = new TTree("Tree_Optim","Output TTree");
@@ -2614,7 +2617,9 @@ void FillEpsilonPlot::computeEpsilon(std::vector< CaloCluster > & clusters, std:
           pho1_eta = g1eta;
           pho2_eta = g2eta;
           isPi0EB = subDetId==EcalBarrel;
-          tree_mon->Fill();
+          if (MakeMonitoring_){
+            tree_mon->Fill();
+          }
 
 	  pi0pt_afterCuts->Fill(whichRegionEcalStreamPi0, pi0P4_nocor_pt);
 	  g1pt_afterCuts->Fill(whichRegionEcalStreamPi0, g1pt);
@@ -3510,7 +3515,9 @@ void FillEpsilonPlot::endJob(){
   pi0_mass_EB->Write();
   pi0_mass_EEP->Write();
   pi0_mass_EEM->Write();
-  tree_mon->Write();
+  if(MakeMonitoring_){
+    tree_mon->Write();
+  }
   
   pi0MassVsIetaEB->Write();
   pi0MassVsETEB->Write();

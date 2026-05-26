@@ -272,6 +272,7 @@ private:
     /////////
     bool isCRAB_;
     bool MakeNtuple4optimization_;
+    bool MakeMonitoring_;
     bool isDebug_;
     /// all the three options have to be instantiated to allow the
     //choice at runtime

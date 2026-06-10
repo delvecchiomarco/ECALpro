@@ -457,7 +457,7 @@ FillEpsilonPlot::FillEpsilonPlot(const edm::ParameterSet& iConfig):
     if(!outfile_ or not outfile_->IsOpen()) throw cms::Exception("WritingOutputFile") << "It was no possible to create output file " << fileName << "\n";
 
     ///TTree needed for monitoring having time, day, year info
-    if (MakeMonitoring_){
+    if(MakeMonitoring_){
       tree_mon = new TTree("monitoring","TTree for monitoring");
       tree_mon->Branch( "Event",     &myEvent,     "Event/l"); // l is for ULong64_t
       tree_mon->Branch( "LumiBlock", &myLumiBlock, "LumiBlock/I");
@@ -2617,7 +2617,7 @@ void FillEpsilonPlot::computeEpsilon(std::vector< CaloCluster > & clusters, std:
           pho1_eta = g1eta;
           pho2_eta = g2eta;
           isPi0EB = subDetId==EcalBarrel;
-          if (MakeMonitoring_){
+          if(MakeMonitoring_){
             tree_mon->Fill();
           }
 
